@@ -1,41 +1,66 @@
 <template>
   <div>
-    <select class="form-control" v-model="selected">
-      <option>Category</option>
-      <option v-for="category in categories" :key='category'>{{category}}</option>
-    </select>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Category</th>
-          <th>Weight</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="item in filteredItems">
-          <recipe :recipes="getRecipe(item)" :key="'recipe_' + item.Name" />
-        </template>
-      </tbody>
-    </table>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm">
+          <label>Search for Names</label> <br/>
+          <input type="text" v-model="textFilter" />          
+        </div>
+        <div class="col-sm">
+          <select class="form-control" v-model="selected">
+            <option value="none" selected>
+              Select a category
+            </option>
+            <option v-for="category in categories" :key="category">{{
+              category
+            }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Weight</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="item in filteredItems">
+                <recipe
+                  :recipes="getRecipe(item)"
+                  :key="'recipe_' + item.Name"
+                />
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { filter } from "vue/types/umd";
 import Recipe from "./Recipe.vue";
 
 @Component({
   components: {
     Recipe,
-  },
+  }
 })
 export default class MaterialList extends Vue {
   @Prop() private msg!: string;
   private items: Material[] = [] as Material[];
   private recipes: any[] = [];
-  private selected = "";
+  private selected = "none";
+  private textFilter = '';
   private $papa;
 
   created() {
@@ -64,10 +89,17 @@ export default class MaterialList extends Vue {
   }
 
   get filteredItems(): Material[] {
-    if (this.selected !== "" && this.selected !== "Category") {
-      return this.items.filter((i) => i.Category === this.selected);
+
+    let filteredItems = this.items;
+
+    if(this.textFilter !== ''){
+      filteredItems = filteredItems.filter(i=>i.Name.toLowerCase().indexOf(this.textFilter) >= 0)
     }
-    return this.items;
+
+    if (this.selected !== "" && this.selected !== "none") {
+      filteredItems = filteredItems.filter((i) => i.Category === this.selected);
+    }
+    return filteredItems;
   }
 
   groupBy(xs, key) {
