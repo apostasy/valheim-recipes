@@ -36,8 +36,11 @@ export default class MaterialList extends Vue {
   private items: Material[] = [] as Material[];
   private recipes: any[] = [];
   private selected = "";
+  private $papa;
 
   created() {
+    this.$papa = this.$papa || {};
+
     this.$papa.parse(
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLPueia8-lx3pOhD4C26iOvFmRxtUApEB9R2WFSx6uk4kEIaiZA2sMPhoXymO7EFTx5kqKzp2ONMBM/pub?gid=0&single=true&output=csv",
       {
