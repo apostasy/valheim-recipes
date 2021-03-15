@@ -10,7 +10,7 @@
       <td>{{ recipes.Material.Weight }}lbs.</td>
       <td>{{ recipes.Material.Notes }}</td>
     </tr>
-    <tr v-if="Object.keys(recipes.Recipes).length > 0">
+    <tr v-if="Object.keys(recipes.Recipes).length > 0 || reagentFor.length > 0">
       <td colspan="4">
         <div
           :id="`${recipes.Material.Name.replace(' ', '')}_recipe_card`"
@@ -28,6 +28,12 @@
             </li>
             </ul>
           </div>
+          <div v-if="reagentFor.length > 0">
+              Used in the following recipes:
+              <ul>
+                  <li v-for="recipe in reagentFor" :key="recipes.Material.Name+'_reagent_'+recipe + '_' + recipes.Quantity">{{recipe}}</li>
+              </ul>
+          </div>
         </div>
       </td>
     </tr>
@@ -40,6 +46,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 @Component
 export default class Recipe extends Vue {
   @Prop() private recipes!: RecipeSet;
+  @Prop() private reagentFor!: string[];
 }
 </script>
 

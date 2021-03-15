@@ -34,6 +34,7 @@
               <template v-for="item in filteredItems">
                 <recipe
                   :recipes="getRecipe(item)"
+                  :reagentFor="reagentFor(item)"
                   :key="'recipe_' + item.Name"
                 />
               </template>
@@ -93,13 +94,15 @@ export default class MaterialList extends Vue {
     let filteredItems = this.items;
 
     if(this.textFilter !== ''){
-      filteredItems = filteredItems.filter(i=>i.Name.toLowerCase().indexOf(this.textFilter) >= 0)
+      filteredItems = filteredItems.filter(i=>i.Name.toLowerCase().indexOf(this.textFilter) >= 0);
+      const reagentFor = this.reagentFor;
+      filteredItems = filteredItems.concat(this.items.filter(i=>reagentFor(i).join('').toLowerCase().indexOf(this.textFilter) >= 0));
     }
 
     if (this.selected !== "" && this.selected !== "none") {
       filteredItems = filteredItems.filter((i) => i.Category === this.selected);
     }
-    return filteredItems;
+    return [...new Set(filteredItems)];
   }
 
   groupBy(xs, key) {
@@ -116,6 +119,10 @@ export default class MaterialList extends Vue {
       Recipes: this.groupBy(ingredients, "Quantity"),
     } as RecipeSet;
     return recipeSet;
+  }
+
+  reagentFor(item: Material): string[] {
+    return this.recipes.filter((i) => i.Ingredient === item.Name).map(i=>i.Result + ' x ' + i.Quantity);
   }
 }
 </script>
