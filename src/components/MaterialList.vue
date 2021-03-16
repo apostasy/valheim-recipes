@@ -3,8 +3,8 @@
     <div class="container">
       <div class="row">
         <div class="col-sm">
-          <label>Search for Names</label> <br/>
-          <input type="text" v-model="textFilter" />          
+          <label>Search for Names</label> <br />
+          <input type="text" v-model="textFilter" />
         </div>
         <div class="col-sm">
           <select class="form-control" v-model="selected">
@@ -33,7 +33,7 @@
             <tbody>
               <template v-for="item in filteredItems">
                 <recipe
-                  :recipes="getRecipe(item)"
+                  :recipes="getRecipe(item.Name)"
                   :reagentFor="reagentFor(item)"
                   :key="'recipe_' + item.Name"
                 />
@@ -48,20 +48,19 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { filter } from "vue/types/umd";
 import Recipe from "./Recipe.vue";
 
 @Component({
   components: {
     Recipe,
-  }
+  },
 })
 export default class MaterialList extends Vue {
   @Prop() private msg!: string;
   private items: Material[] = [] as Material[];
-  private recipes: any[] = [];
+  private recipes: RecipeDefinition[] = [];
   private selected = "none";
-  private textFilter = '';
+  private textFilter = "";
   private $papa;
 
   created() {
@@ -90,19 +89,41 @@ export default class MaterialList extends Vue {
   }
 
   get filteredItems(): Material[] {
+    let filteredItems = this.items as Material[];
 
-    let filteredItems = this.items;
-
-    if(this.textFilter !== ''){
-      filteredItems = filteredItems.filter(i=>i.Name.toLowerCase().indexOf(this.textFilter) >= 0);
+    if (this.textFilter !== "") {
+      filteredItems = filteredItems.filter(
+        (i) => i.Name.toLowerCase().indexOf(this.textFilter) >= 0
+      );
       const reagentFor = this.reagentFor;
-      filteredItems = filteredItems.concat(this.items.filter(i=>reagentFor(i).join('').toLowerCase().indexOf(this.textFilter) >= 0));
+      filteredItems = filteredItems.concat(
+        this.items.filter(
+          (i) =>
+            reagentFor(i)
+              .join("")
+              .toLowerCase()
+              .indexOf(this.textFilter) >= 0
+        )
+      );
+      const matchingSubRecipes = this.filterSubRecipes(this.textFilter).map(i=>this.items.find(j=>j.Name===i.Result)).filter(i=>i !== undefined) as Material[];
+      if(matchingSubRecipes !== undefined){
+        filteredItems = filteredItems.concat(...matchingSubRecipes);
+      }
     }
 
     if (this.selected !== "" && this.selected !== "none") {
       filteredItems = filteredItems.filter((i) => i.Category === this.selected);
     }
     return [...new Set(filteredItems)];
+  }
+
+  filterSubRecipes(item: string): RecipeDefinition[]{
+    if(item == null){
+      return [];
+    }
+    let items = this.recipes.filter(i=>i.Ingredient.toLowerCase().indexOf(item.toLowerCase()) >= 0);
+    items = items.concat(...items.map(i=>this.filterSubRecipes(i.Result)));
+    return items
   }
 
   groupBy(xs, key) {
@@ -112,17 +133,40 @@ export default class MaterialList extends Vue {
     }, {});
   }
 
-  getRecipe(item: Material): RecipeSet {
-    const ingredients = this.recipes.filter((i) => i.Result === item.Name);
-    const recipeSet = {
-      Material: item,
-      Recipes: this.groupBy(ingredients, "Quantity"),
+  getRecipe(item: string): RecipeSet | null {
+    // const ingredients = this.recipes.filter((i) => i.Result === item.Name);
+    // const subRecipes = ingredients.map(i=>this.getRecipe(this.items.find(j=>j.Name===i.Ingredient)));
+    // const recipeSet = {
+    //   Material: item,
+    //   Recipes: this.groupBy(ingredients, "Quantity"),
+    //   SubRecipes: subRecipes
+    // } as RecipeSet;
+    // return recipeSet;
+
+    if (item == null) {
+      return null;
+    }
+    const r = this.recipes.filter((i) => i.Result === item);
+    let s = [] as (RecipeSet | null)[];
+    if (r.length !== 0) {
+      s = r.map((i) => this.getRecipe(i.Ingredient));
+    }
+    const recipe = {
+      Material: this.items.find((i) => i.Name === item),
+      Recipes: this.groupBy(r, "Quantity"),
+      SubRecipes: (this as any).custom.uniqBy(
+        s.filter((i) => i !== null),
+        (i) => i.Material.Name
+      ),
     } as RecipeSet;
-    return recipeSet;
+
+    return recipe;
   }
 
   reagentFor(item: Material): string[] {
-    return this.recipes.filter((i) => i.Ingredient === item.Name).map(i=>i.Result + ' x ' + i.Quantity);
+    return this.recipes
+      .filter((i) => i.Ingredient === item.Name)
+      .map((i) => i.Result + " x " + i.Quantity);
   }
 }
 </script>

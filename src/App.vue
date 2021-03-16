@@ -9,6 +9,12 @@ import { Component, Vue } from 'vue-property-decorator';
 import HelloWorld from './components/HelloWorld.vue';
 import MaterialList from './components/MaterialList.vue';
 import Recipe from './components/Recipe.vue';
+import VueLodash from 'vue-lodash'
+import uniqBy from 'lodash/uniqBy'
+import isEqual from 'lodash/isEqual'
+import includes from 'lodash/includes'
+
+Vue.use(VueLodash, { name: 'custom', lodash: { uniqBy, isEqual, includes } })
 
 @Component({
   components: {

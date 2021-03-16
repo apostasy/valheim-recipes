@@ -18,5 +18,14 @@ declare interface Ingredient {
 
 declare interface RecipeSet {
     Material: Material;
-    Recipes: CraftingRecipe[]
+    Recipes: CraftingRecipe[] | null;
+    SubRecipes: RecipeSet[] | null;
+}
+
+declare interface RecipeDefinition {
+    Result: string;
+    Quantity: number;
+    Ingredient: string;
+    "Ingredient Quantity": number;
+    "Logical Operator": string;
 }
